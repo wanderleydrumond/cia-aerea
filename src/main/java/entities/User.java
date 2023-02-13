@@ -16,6 +16,12 @@ import javax.validation.constraints.NotBlank;
 import enums.Role;
 import lombok.Data;
 
+/**
+ * User information type that the backend consumes and produces.
+ * 
+ * @author Wanderley Drumond
+ *
+ */
 @Entity
 @Table(name = "users")
 @Data

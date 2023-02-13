@@ -9,6 +9,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * User information type that the frontend consumes and produces.
+ * 
+ * @author Wanderley Drumond
+ *
+ */
 @XmlRootElement
 @NoArgsConstructor
 @Getter
