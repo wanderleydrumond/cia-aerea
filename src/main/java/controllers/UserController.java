@@ -1,16 +1,19 @@
 package controllers;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import dtos.UserDTO;
-import enums.Action;
+import entities.User;
 import enums.Role;
 import services.UserService;
 
@@ -83,7 +86,7 @@ public class UserController {
 			return Response.status(403).build();
 		}
 		
-		UserDTO userDTOCreated = userService.save(userDTOtoBeCreated, loggedUserRole, Action.CREATE);
+		UserDTO userDTOCreated = userService.create(userDTOtoBeCreated, loggedUserRole);
 		
 		if (userDTOCreated == null) {
 			return Response.status(400).build();
@@ -149,5 +152,104 @@ public class UserController {
 		}
 		
 		return Response.ok().build();
+	}
+	
+	/**
+	 * Updates names and / or role for the user that owns the given id, depending the privileges of the logged user.
+	 * 
+	 * @param token 			logged user identifier key
+	 * @param idUserToBeUpdated user that will be updated primary key
+	 * @param userDTO			new informations to be updated
+	 * @return
+	 * 		  <ul>
+	 * 			<li>
+	 * 				<strong>403 (Forbidden)</strong> If:
+	 * 				<ul>
+	 * 					<li>A client try to update another user</li>
+	 * 					<li>An employee try to update another one employee</li>
+	 * 					<li>An employee try to update an admin</li>
+	 * 					<li>An user try to update their own username or password </li>
+	 * 					<li>An user try to update username or password of another user</li>
+	 * 				</ul>
+	 * 			</li>
+ 	 * 			<li><strong>401 (Unauthorized)</strong></li>
+ 	 * 			<li><strong>404 (Not Found)</strong> if the logged user or the user who will be updated wasn't found in the database</li>
+ 	 * 			<li><strong>503 (Service Unavailable)</strong>if there was some issue with the database</li> 
+ 	 * 			<li><strong>200 (OK)</strong> if the used was successfully updated</li>
+	 * 		  </ul>
+	 */
+	@Path("/update/{id}")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response update(@HeaderParam("token") String token, @PathParam("id") Integer idUserToBeUpdated, UserDTO userDTO) {
+		String message;
+		if (token == null || token.isBlank() || idUserToBeUpdated == null) {
+			message = "No token in logged user or no id in user to be updated";
+			return Response.status(403).entity(message).build();
+		}
+		
+		Optional<User> loggedUser = userService.getByToken(token);
+		Optional<User> userToBeUpdated = userService.getById(userDTO.getId());
+		
+		// Se houver um utilzador logado 
+		if (loggedUser.isPresent()) {
+			// E for um cliente
+			if (loggedUser.get().getRole().equals(Role.CLIENT)) {
+				// E tentar alterar dados de outro cliente 
+				if (idUserToBeUpdated != userDTO.getId()) {
+					message = "A client cannot update another user";
+					return Response.status(403).entity(message).build();
+				}
+			}
+			
+			// E se for um empregado
+			if (loggedUser.get().getRole().equals(Role.EMPLOYEE)) {
+				// E se tentar alterar dados que não sejam dele próprio ou que sejam de outro user que não seja um cliente
+				if (!userToBeUpdated.get().getRole().equals(Role.CLIENT) && userToBeUpdated.get().getId() != loggedUser.get().getId()) {
+					message = "An employee is only allowed to update their own or clients data";
+					return Response.status(403).entity(message).build();
+				}
+			}
+		}
+		
+		
+		// Se não achou o user na base de dados
+		if (userToBeUpdated.isEmpty() || loggedUser.isEmpty()) {
+			message = "User not found in database";
+			return Response.status(404).entity(message).build();
+		}
+		
+		// Se o cliente tentar modificar outro utilizador
+		if (loggedUser.get().getRole().equals(Role.CLIENT) && loggedUser.get().getId() != userToBeUpdated.get().getId()) {
+			message = "The logged user is a client and is trying to update another user";
+			return Response.status(403).entity(message).build();
+		}
+		
+		// Se um funcionário ou um cliente tentar atualizar o role de um utilizador qualquer
+		if (loggedUser.get().getRole().equals(Role.CLIENT) || loggedUser.get().getRole().equals(Role.EMPLOYEE) && !userToBeUpdated.get().getRole().equals(userDTO.getRole())) {
+			message = "An employee ou a client is trying to update the role of another user";
+			return Response.status(403).entity(message).build();
+		}
+		
+		// Se deu algum problema na base de dados
+		if (userToBeUpdated == null || loggedUser == null) {
+			message = "There where some problem with the database trying to find the following object entities: loggedUser and UserToBeUpdated";
+			return Response.status(503).entity(message).build();
+		}
+		
+		UserDTO userDTOToBeUpdated = userService.update(loggedUser.get(), userToBeUpdated.get(), userDTO);
+		
+		if (userDTOToBeUpdated == null) {
+			message = "There where some problem with the database trying to find the following object DTO: userDTOToBeUpdated";
+			return Response.status(503).build();
+		}
+		
+		if (userDTOToBeUpdated.getId() == null) {
+			message = "Is not possible to update username and password";
+			return Response.status(403).entity(message).build();
+		}
+		
+		return Response.ok(userDTOToBeUpdated).build();
 	}
 }

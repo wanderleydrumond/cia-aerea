@@ -1,6 +1,7 @@
 package services;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.enterprise.context.RequestScoped;
@@ -9,7 +10,6 @@ import javax.inject.Inject;
 import daos.UserDAO;
 import dtos.UserDTO;
 import entities.User;
-import enums.Action;
 import enums.Role;
 import mappers.UserMapper;
 
@@ -83,12 +83,12 @@ public class UserService implements Serializable {
 	 */
 	public Role validateLoggedUserRole(String token) {
 		try {
-			User user = userDAO.getUserByToken(token, "token");
+			Optional<User> user = userDAO.findByToken(token, "token");
 
-			if (user != null) {
-				if (user.getRole().equals(Role.EMPLOYEE)) {
+			if (user.isPresent()) {
+				if (user.get().getRole().equals(Role.EMPLOYEE)) {
 					return Role.EMPLOYEE;
-				} else if (user.getRole().equals(Role.ADMINISTRATOR)) {
+				} else if (user.get().getRole().equals(Role.ADMINISTRATOR)) {
 					return Role.ADMINISTRATOR;
 				}
 
@@ -107,44 +107,65 @@ public class UserService implements Serializable {
 	/**
 	 * Saves another user in the database.
 	 * 
-	 * @param userDTOtoBeCreated logged user who will save the given user
-	 * @param loggedUserRole 	 logged user role (ADMINISTRATOR or EMPLOYEE)
-	 * @param action			 action to be done (CREATE or UPDATE) 
+	 * @param userDTOtoBeSaved logged user who will save the given user
+	 * @param loggedUserRole   logged user role (ADMINISTRATOR or EMPLOYEE) 
 	 * @return
 	 * 		  <ul>
 	 * 			<li>The DTO for the new created user</li>
 	 * 			<li><strong>NULL</strong> if error occurred, preventing the user from being saved</li>
 	 * 		  </ul>
 	 */
-	public UserDTO save(UserDTO userDTOtoBeCreated, Role loggedUserRole, Action action) {
+	public UserDTO create(UserDTO userDTOtoBeSaved, Role loggedUserRole) {
 		try {
-			User userToBeSaved = userMapper.toEntity(userDTOtoBeCreated);
+			User userToBeSaved = userMapper.toEntity(userDTOtoBeSaved);
 
 			if (loggedUserRole.equals(Role.EMPLOYEE)) {
 				userToBeSaved.setRole(Role.CLIENT);
-				userDTOtoBeCreated.setRole(Role.CLIENT); // apenas para retornar uma informação mais fidedigna
+				userDTOtoBeSaved.setRole(Role.CLIENT); // apenas para retornar uma informação mais fidedigna
 			}
 
-			if (action.equals(Action.CREATE)) {
-				// verifica se o username já existe
-				Boolean usernameExists = userDAO.exists(userDTOtoBeCreated.getUsername());
-				if (Boolean.TRUE.equals(usernameExists)) {
-					return new UserDTO();
-				}
-				
-				if (usernameExists == null) {
-					return null;
-				}
-				
-				userDAO.persist(userToBeSaved);
-				userDTOtoBeCreated.setId(userToBeSaved.getId());
+			// verifica se o username já existe
+			Boolean usernameExists = userDAO.exists(userDTOtoBeSaved.getUsername());
+			if (Boolean.TRUE.equals(usernameExists)) {
+				return new UserDTO();
 			}
-
-			return userDTOtoBeCreated;
+			
+			if (usernameExists == null) {
+				return null;
+			}
+			
+			userDAO.persist(userToBeSaved);
+			userDTOtoBeSaved.setId(userToBeSaved.getId());
+			
+			return userDTOtoBeSaved;
 		} catch (Exception exception) {
 			System.err.println("Catch save() in UserService");
 			exception.printStackTrace();
 
+			return null;
+		}
+	}
+
+	public UserDTO update(User loggedUser, User userToBeUpdated, UserDTO userDTO) {
+		try {
+			userToBeUpdated.setId(userDTO.getId());
+			userToBeUpdated.setName(userDTO.getName());
+			
+			if (!userToBeUpdated.getUsername().equals(userDTO.getUsername()) || 
+				!userToBeUpdated.getPassword().equals(userDTO.getPassword())) {
+				return new UserDTO();
+			}
+			
+			if (loggedUser.getRole().equals(Role.ADMINISTRATOR)) {
+				userToBeUpdated.setRole(userDTO.getRole());
+			}
+			
+			userDAO.merge(userToBeUpdated);
+			
+			return userMapper.toDTO(userToBeUpdated);
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			
 			return null;
 		}
 	}
@@ -211,5 +232,29 @@ public class UserService implements Serializable {
 
 			return null;
 		}
+	}
+
+	public Optional<User> getById(Integer idUserToBeUpdated) {
+		try {
+			Optional<User> optionalUser = userDAO.find(idUserToBeUpdated);
+			
+			if (optionalUser == null) { // Se deu algum problema na base de dados
+				return null;
+			}
+			
+			if (optionalUser.equals(Optional.empty())) { // Caso não tenha encontrado o utilizador
+				return Optional.empty();
+			}
+			
+			return optionalUser;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			
+			return null;
+		}
+	}
+
+	public Optional<User> getByToken(String token) {
+		return userDAO.findByToken(token, "token");
 	}
 }

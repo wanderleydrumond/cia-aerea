@@ -1,5 +1,7 @@
 package daos;
 
+import java.util.Optional;
+
 import javax.ejb.Stateless;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
@@ -43,7 +45,7 @@ public class UserDAO extends GenericDAO<User> {
 	 * 		<li>no user was found, <strong>null</strong></li>
 	 * 	</ul> 
 	 */
-	public User getUserByToken(String token, String tokenColumn) {
+	public Optional<User> findByToken(String token, String tokenColumn) {
 		try {
 			final CriteriaQuery<User> CRITERIA_QUERY;
 			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -52,7 +54,7 @@ public class UserDAO extends GenericDAO<User> {
 
 			CRITERIA_QUERY.select(userTable).where(criteriaBuilder.equal(userTable.get(tokenColumn), token));
 
-			return entityManager.createQuery(CRITERIA_QUERY).getSingleResult();
+			return entityManager.createQuery(CRITERIA_QUERY).getResultList().stream().findFirst();
 		} catch (Exception exception) {
 			System.err.println("Catch getUserByToken() in UserDAO");
 			exception.printStackTrace();
@@ -118,12 +120,12 @@ public class UserDAO extends GenericDAO<User> {
 	}
 
 	/**
-	 * Checks in database if exists the same username as been given.
+	 * Checks in database if exists the same username as that have been given.
 	 * 
 	 * @param username to be found in the database
 	 * @return
 	 * 		  <ul>
-	 * 			If result:
+	 * 			If:
 	 * 			<li>Is found, <strong>TRUE</strong></li>
 	 * 			<li>Is not found, gets <code>NoResultException, then </code><strong>FALSE</strong></li>
 	 * 			<li>Something goes wrong, <strong>NULL</strong></li>

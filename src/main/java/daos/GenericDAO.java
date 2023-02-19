@@ -2,6 +2,7 @@ package daos;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -48,11 +49,11 @@ public abstract class GenericDAO<T extends Serializable> implements Serializable
 	 * Finds the given item into the database.
 	 * 
 	 * @param primaryKey the entity primary key
-	 * @return the resultant object
+	 * @return the resultant object entity
 	 */
-	public T find(Object primaryKey) {
+	public Optional<T> find(Object primaryKey) {
 		try {
-			return entityManager.find(CLAZZ, primaryKey);
+			return Optional.ofNullable(entityManager.find(CLAZZ, primaryKey));
 		} catch (Exception exception) {
 			exception.printStackTrace();
 			return null;
