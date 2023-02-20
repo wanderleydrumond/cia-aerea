@@ -65,14 +65,26 @@ public class UserDAO extends GenericDAO<User> {
 		}
 	}
 
-	public List<User> findAllByRole(Role role) {
+	/**
+	 * Finds all users non deleted in the database by the given role.
+	 * 
+	 * @param role from the user that is doing the search
+	 * @return
+	 * 		  <ul>
+	 * 			<li>the list of users, if successful</li>
+	 * 			<li>null, if error occurred, preventing the user from being found</li>
+	 * 		  </ul>
+	 */
+	public List<User> findAllNonDeletedByRole(Role role) {
 		try {
 			final CriteriaQuery<User> CRITERIA_QUERY;
 			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 			CRITERIA_QUERY = criteriaBuilder.createQuery(User.class);
 			Root<User> userTable = CRITERIA_QUERY.from(User.class);
 			
-			CRITERIA_QUERY.select(userTable).where(criteriaBuilder.equal(userTable.get("role"), role));
+			CRITERIA_QUERY.select(userTable).where(criteriaBuilder
+					.and(criteriaBuilder.equal(userTable.get("role"), role), 
+						 criteriaBuilder.equal(userTable.get("isDeleted"), false)));
 			
 			return entityManager.createQuery(CRITERIA_QUERY).getResultList();
 		} catch (Exception exception) {

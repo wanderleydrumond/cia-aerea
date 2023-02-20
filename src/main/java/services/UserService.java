@@ -74,7 +74,7 @@ public class UserService implements Serializable {
 	/**
 	 * Validates the role of the user with the given token.
 	 *
-	 * @param token the authorization token of the user
+	 * @param token logged user identifier key
 	 * @return the role of the user with the given token, one of the following:
 	 * 		<ul>
 	 *			<li><strong>EMPLOYEE</strong> if the user is an employee</li>
@@ -148,6 +148,19 @@ public class UserService implements Serializable {
 		}
 	}
 
+	/**
+	 * Updates user's data into database.
+	 * 
+	 * @param loggedUser	  the user who will do the action
+	 * @param userToBeUpdated the user who will suffer the action
+	 * @param userDTO		  the data to be updated
+	 * @return 
+	 * 		  <ul>
+	 * 			<li>a new user DTO if user tried to update username or password</li>
+	 * 			<li>the user's DTO data updated if the request was done successfully</li>
+	 * 			<li>null, if error occurred, preventing the user from being updated</li>
+	 * 		  </ul>
+	 */
 	public UserDTO update(User loggedUser, User userToBeUpdated, UserDTO userDTO) {
 		try {
 			userToBeUpdated.setId(userDTO.getId());
@@ -206,7 +219,7 @@ public class UserService implements Serializable {
 	/**
 	 * Signs out a user from the system.
 	 * 
-	 * @param token the token of the user
+	 * @param token logged user identifier key
 	 * @return
 	 * 	<ul>If:
 	 * 		<li><strong>Successful</strong>, true</li>
@@ -236,9 +249,19 @@ public class UserService implements Serializable {
 		}
 	}
 
-	public Optional<User> getById(Integer idUserToBeUpdated) {
+	/**
+	 * Gets the user that owns the given id.
+	 * 
+	 * @param idUserToBeFound primary key of the user that will be found
+	 * @return
+	 * 		  <ul>
+	 * 			<li>The user, encapsulated into an <code>Optional</code> object</li>
+	 * 			<li>Null, if error occurred, preventing the user from being found</li>
+	 * 		  </ul>
+	 */
+	public Optional<User> getById(Integer idUserToBeFound) {
 		try {
-			Optional<User> optionalUser = userDAO.find(idUserToBeUpdated);
+			Optional<User> optionalUser = userDAO.find(idUserToBeFound);
 			
 			if (optionalUser == null) { // Se deu algum problema na base de dados
 				return null;
@@ -257,21 +280,45 @@ public class UserService implements Serializable {
 		}
 	}
 
+	/**
+	 * Gets the user that owns the given token.
+	 * 
+	 * @param token logged user identifier key
+	 * @return
+	 */
 	public Optional<User> getByToken(String token) {
 		return userDAO.findByToken(token, "token");
 	}
 
+	/**
+	 * Gets all users from system without restrictions.
+	 * 
+	 * @return A list of all users of the system
+	 */
 	public List<User> getAll() {
 		List<User> users = userDAO.findAll();
 		return users;
 	}
 
-	public List<User> getAllByRole(Role role) {
+	
+	/**
+	 * Gets all users non deleted by the given role.
+	 * 
+	 * @param role from the user that is doing the search
+	 * @return
+	 * 		  <ul>
+	 * 			If the user role is:
+	 * 			<li><strong>CLIENT</strong>, null</li>
+	 * 			<li><strong>EMPLOYEE</strong>, the list of all non-deleted clients</li>
+	 * 			<li><strong>ADMINISTRATOR</strong>, the list of all non-deleted users</li>
+	 * 		  </ul>
+	 */
+	public List<User> getAllNonDeletedByRole(Role role) {
 		List<User> users = new ArrayList<>();
 		try {
 			// Se o usuário logado for um empregado, ele só pode ver lista de clientes
 			if (role.equals(Role.EMPLOYEE)) {
-				users = userDAO.findAllByRole(Role.CLIENT);
+				users = userDAO.findAllNonDeletedByRole(Role.CLIENT);
 			}
 			
 			// Se o usuário logado for um cliente, ele não tem nada

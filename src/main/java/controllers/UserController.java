@@ -36,8 +36,7 @@ public class UserController {
 	UserService userService;
 	
 	/**
-	 * Object that contains methods from <code>User</code> object to switch it
-	 * between Entity and DTO formats.
+	 * Object that contains methods from <code>User</code> object to switch it between Entity and DTO formats.
 	 */
 	@Inject
 	UserMapper userMapper;
@@ -169,7 +168,7 @@ public class UserController {
 	 * Updates names and / or role for the user that owns the given id, depending the privileges of the logged user.
 	 * 
 	 * @param token 			logged user identifier key
-	 * @param idUserToBeUpdated user that will be updated primary key
+	 * @param idUserToBeUpdated primary key of the user that will be updated
 	 * @param userDTO			new informations to be updated
 	 * @return
 	 * 		  <ul>
@@ -263,6 +262,24 @@ public class UserController {
 		return Response.ok(userDTOToBeUpdated).build();
 	}
 	
+	/**
+	 * <p>Gets the user that owns the given id</p>
+	 * 
+	 * @param token			  logged user identifier key
+	 * @param idUserToBeFound primary that identifies the user to be found
+	 * @return
+	 * 		  <ul>
+	 * 			<li><strong>401 (Unauthorized)</strong> if the user does not have a token. (Is not logged)</li>
+	 * 			<li><strong>400 (Bad Request)</strong> if no id for the user to be found was given</li>
+	 * 			<li><strong>200 (OK)</strong> if the requisition returned successfully the user</li>
+	 * 			<li><strong>403 (Forbidden)</strong>
+	 * 				<ul> If
+	 * 					<li>A client tried to see another user's data</li>
+	 * 					<li>An employee tried to see another user data who is not a client</li>
+	 * 				</ul>
+	 * 			</li>
+	 * 		  </ul>
+	 */
 	@Path("get/{id}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -307,13 +324,24 @@ public class UserController {
 		return Response.ok(userDTOFound).build();
 	}
 	
+	/**
+	 * Gets all users registered in the system according to the role privilege of the logged user.
+	 * 
+	 * @param token logged user identifier key
+	 * @return
+	 * 		  <ul>
+	 * 			<li><strong>401 (Unauthorized)</strong> if the user does not have a token. (Is not logged)</li>
+	 * 			<li><strong>200 (OK)</strong> if the requisition returned successfully the users list</li>
+	 * 			<li><strong>403 (Forbidden)</strong>if the logged user is a client</li>
+	 * 		  </ul>
+	 */
 	@Path("/all")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAll(@HeaderParam("token") String token) {
 		if (token == null || token.isBlank()) {
 			String message = "User not logged";
-			return Response.status(400).entity(message).build();
+			return Response.status(401).entity(message).build();
 		}
 		List<User> usersFound = new ArrayList<>();
 		Optional<User> loggedUser = userService.getByToken(token);
@@ -321,7 +349,7 @@ public class UserController {
 		if (loggedUser.get().getRole().equals(Role.ADMINISTRATOR)) {
 			usersFound = userService.getAll();
 		} else {
-			usersFound = userService.getAllByRole(loggedUser.get().getRole());
+			usersFound = userService.getAllNonDeletedByRole(loggedUser.get().getRole());
 		}
 		
 		if (usersFound == null) {
