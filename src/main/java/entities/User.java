@@ -13,6 +13,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import enums.Role;
 import lombok.Data;
 
@@ -44,6 +46,7 @@ public class User implements Serializable {
 	@Enumerated(EnumType.STRING)
 	private Role role;
 	private Boolean isDeleted;
+	@JsonIgnore
 	@OneToMany(mappedBy = "passenger")
 	private List<Ticket> tickets;
 }

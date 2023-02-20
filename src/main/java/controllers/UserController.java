@@ -1,9 +1,12 @@
 package controllers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -15,6 +18,7 @@ import javax.ws.rs.core.Response;
 import dtos.UserDTO;
 import entities.User;
 import enums.Role;
+import mappers.UserMapper;
 import services.UserService;
 
 /**
@@ -30,6 +34,13 @@ public class UserController {
 	 */
 	@Inject
 	UserService userService;
+	
+	/**
+	 * Object that contains methods from <code>User</code> object to switch it
+	 * between Entity and DTO formats.
+	 */
+	@Inject
+	UserMapper userMapper;
 
    /**
 	* Registers a new user in the system.
@@ -172,9 +183,8 @@ public class UserController {
 	 * 					<li>An user try to update username or password of another user</li>
 	 * 				</ul>
 	 * 			</li>
- 	 * 			<li><strong>401 (Unauthorized)</strong></li>
  	 * 			<li><strong>404 (Not Found)</strong> if the logged user or the user who will be updated wasn't found in the database</li>
- 	 * 			<li><strong>503 (Service Unavailable)</strong>if there was some issue with the database</li> 
+ 	 * 			<li><strong>503 (Service Unavailable)</strong> if there was some issue with the database</li> 
  	 * 			<li><strong>200 (OK)</strong> if the used was successfully updated</li>
 	 * 		  </ul>
 	 */
@@ -251,5 +261,74 @@ public class UserController {
 		}
 		
 		return Response.ok(userDTOToBeUpdated).build();
+	}
+	
+	@Path("get/{id}")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getById(@HeaderParam("token") String token, @PathParam("id") String idUserToBeFound) {
+		if (token == null || token.isBlank()) {
+			String message = "User not logged";
+			return Response.status(401).entity(message).build();
+		}
+		
+		if (idUserToBeFound == null || idUserToBeFound.isBlank()) {
+			String message = "User to be found id is mandatory";
+			return Response.status(400).entity(message).build();
+		}
+		
+		Optional<User> loggedUser = userService.getByToken(token);
+		Optional<User> userToBeFound = userService.getById(Integer.parseInt(idUserToBeFound));
+		
+		if (loggedUser.isPresent() && userToBeFound.isPresent()) {
+			if (loggedUser.get().getRole().equals(Role.CLIENT) && loggedUser.get().getId() != userToBeFound.get().getId()) {
+				String message = "A client is not allowed to see other users data";
+				return Response.status(403).entity(message).build();
+			}
+			
+			if (loggedUser.get().getRole().equals(Role.EMPLOYEE)) {
+				if (userToBeFound.get().getRole().equals(Role.EMPLOYEE) && userToBeFound.get().getId() != loggedUser.get().getId()) {
+					String message = "An employee is not allowed to see other users data with role EMPLOYEE";
+					return Response.status(403).entity(message).build();
+				}
+				
+				if (userToBeFound.get().getRole().equals(Role.ADMINISTRATOR)) {
+					String message = "An employee is not allowed to see other users data with role ADMINISTRATOR";
+					return Response.status(403).entity(message).build();
+				}
+			}
+		} else {
+			String message = "User not found in database";
+			return Response.status(401).entity(message).build();
+		}
+		
+		UserDTO userDTOFound = userMapper.toDTO(userToBeFound.get());
+		
+		return Response.ok(userDTOFound).build();
+	}
+	
+	@Path("/all")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAll(@HeaderParam("token") String token) {
+		if (token == null || token.isBlank()) {
+			String message = "User not logged";
+			return Response.status(400).entity(message).build();
+		}
+		List<User> usersFound = new ArrayList<>();
+		Optional<User> loggedUser = userService.getByToken(token);
+		
+		if (loggedUser.get().getRole().equals(Role.ADMINISTRATOR)) {
+			usersFound = userService.getAll();
+		} else {
+			usersFound = userService.getAllByRole(loggedUser.get().getRole());
+		}
+		
+		if (usersFound == null) {
+			String message = "Clients don't have permission to see other users";
+			return Response.status(403).entity(message).build();
+		}
+		
+		return Response.ok(usersFound).build();
 	}
 }

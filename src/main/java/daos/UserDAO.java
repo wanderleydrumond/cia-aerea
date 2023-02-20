@@ -1,5 +1,6 @@
 package daos;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.ejb.Stateless;
@@ -13,6 +14,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
 import entities.User;
+import enums.Role;
 
 /**
  * Class that makes the database communication layer role in relation with of
@@ -56,9 +58,27 @@ public class UserDAO extends GenericDAO<User> {
 
 			return entityManager.createQuery(CRITERIA_QUERY).getResultList().stream().findFirst();
 		} catch (Exception exception) {
-			System.err.println("Catch getUserByToken() in UserDAO");
+			System.err.println("Catch findByToken() in UserDAO");
 			exception.printStackTrace();
 
+			return null;
+		}
+	}
+
+	public List<User> findAllByRole(Role role) {
+		try {
+			final CriteriaQuery<User> CRITERIA_QUERY;
+			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+			CRITERIA_QUERY = criteriaBuilder.createQuery(User.class);
+			Root<User> userTable = CRITERIA_QUERY.from(User.class);
+			
+			CRITERIA_QUERY.select(userTable).where(criteriaBuilder.equal(userTable.get("role"), role));
+			
+			return entityManager.createQuery(CRITERIA_QUERY).getResultList();
+		} catch (Exception exception) {
+			System.err.println("Catch findAllByToken() in UserDAO");
+			exception.printStackTrace();
+			
 			return null;
 		}
 	}

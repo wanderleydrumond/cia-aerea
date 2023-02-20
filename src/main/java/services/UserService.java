@@ -1,6 +1,8 @@
 package services;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -248,6 +250,7 @@ public class UserService implements Serializable {
 			
 			return optionalUser;
 		} catch (Exception exception) {
+			System.err.println("Catch getById() in UserService");
 			exception.printStackTrace();
 			
 			return null;
@@ -256,5 +259,31 @@ public class UserService implements Serializable {
 
 	public Optional<User> getByToken(String token) {
 		return userDAO.findByToken(token, "token");
+	}
+
+	public List<User> getAll() {
+		List<User> users = userDAO.findAll();
+		return users;
+	}
+
+	public List<User> getAllByRole(Role role) {
+		List<User> users = new ArrayList<>();
+		try {
+			// Se o usuário logado for um empregado, ele só pode ver lista de clientes
+			if (role.equals(Role.EMPLOYEE)) {
+				users = userDAO.findAllByRole(Role.CLIENT);
+			}
+			
+			// Se o usuário logado for um cliente, ele não tem nada
+			if (role.equals(Role.CLIENT)) {
+				users = null;
+			}
+			
+			return users;
+		} catch (Exception exception) {
+			System.err.println("Catch getAllByRole() in UserService");
+			exception.printStackTrace();
+			return null;
+		}
 	}
 }
