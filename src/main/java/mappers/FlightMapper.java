@@ -12,7 +12,6 @@ public class FlightMapper {
 	public Flight toEntity(FlightDTO flightDTO) {
 		Flight flight = new Flight();
 		
-		flight.setCode(flightDTO.getCode());
 		flight.setDestination(flightDTO.getDestination());
 		flight.setTotalSeats(flightDTO.getTotalSeats());
 		flight.setDepartTime(Timestamp.valueOf(flightDTO.getDepartTime()));

@@ -17,8 +17,7 @@ import entities.User;
 import enums.Role;
 
 /**
- * Class that makes the database communication layer role in relation with of
- * the user table.
+ * Class that makes the database communication layer role in relation with of the users table.
  * 
  * @author Wanderley Drumond
  *
@@ -37,7 +36,7 @@ public class UserDAO extends GenericDAO<User> {
 	}
 
 	/**
-	 * Finds a user in database with the given token.
+	 * Finds a non-deleted user in database with the given token.
 	 * 
 	 * @param token 	  the token to use as the search key
 	 * @param tokenColumn the column in the database that contains the token value
@@ -47,14 +46,17 @@ public class UserDAO extends GenericDAO<User> {
 	 * 		<li>no user was found, <strong>null</strong></li>
 	 * 	</ul> 
 	 */
-	public Optional<User> findByToken(String token, String tokenColumn) {
+	public Optional<User> findByToken(String token) {
 		try {
 			final CriteriaQuery<User> CRITERIA_QUERY;
 			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 			CRITERIA_QUERY = criteriaBuilder.createQuery(User.class);
 			Root<User> userTable = CRITERIA_QUERY.from(User.class);
 
-			CRITERIA_QUERY.select(userTable).where(criteriaBuilder.equal(userTable.get(tokenColumn), token));
+			CRITERIA_QUERY.select(userTable).where(
+					criteriaBuilder.and(
+							criteriaBuilder.equal(userTable.get("isDeleted"), false), 
+							criteriaBuilder.equal(userTable.get("token"), token)));
 
 			return entityManager.createQuery(CRITERIA_QUERY).getResultList().stream().findFirst();
 		} catch (Exception exception) {
@@ -152,7 +154,7 @@ public class UserDAO extends GenericDAO<User> {
 	}
 
 	/**
-	 * Checks in database if exists the same username as that have been given.
+	 * Checks in database if exists a non-deleted user with the same username as that have been given.
 	 * 
 	 * @param username to be found in the database
 	 * @return
@@ -175,8 +177,10 @@ public class UserDAO extends GenericDAO<User> {
 			Root<User> subRootEntity = subquery.from(User.class);
 			subquery.select(subRootEntity);
 
-			Predicate predicate = criteriaBuilder.equal(subRootEntity.get("username"), username);
-			subquery.where(predicate);
+			Predicate checkUsername = criteriaBuilder.equal(subRootEntity.get("username"), username);
+			Predicate checkIsDeleted = criteriaBuilder.equal(subRootEntity.get("isDeleted"), false);
+			
+			subquery.where(criteriaBuilder.and(checkUsername, checkIsDeleted));
 			query.where(criteriaBuilder.exists(subquery));
 
 			TypedQuery<Boolean> typedQuery = entityManager.createQuery(query);

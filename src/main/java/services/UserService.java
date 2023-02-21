@@ -39,8 +39,7 @@ public class UserService implements Serializable {
 	UserMapper userMapper;
 
 	/**
-	 * Object that contains all methods to manipulates database regarding users
-	 * table.
+	 * Object that contains all methods to manipulates database regarding users table.
 	 */
 	@Inject
 	UserDAO userDAO;
@@ -59,6 +58,7 @@ public class UserService implements Serializable {
 		try {
 			User user = userMapper.toEntity(userDTO);
 			user.setRole(Role.CLIENT);
+			user.setIsDeleted(false);
 
 			userDAO.persist(user);
 
@@ -85,7 +85,7 @@ public class UserService implements Serializable {
 	 */
 	public Role validateLoggedUserRole(String token) {
 		try {
-			Optional<User> user = userDAO.findByToken(token, "token");
+			Optional<User> user = userDAO.findByToken(token);
 
 			if (user.isPresent()) {
 				if (user.get().getRole().equals(Role.EMPLOYEE)) {
@@ -136,6 +136,7 @@ public class UserService implements Serializable {
 				return null;
 			}
 			
+			userToBeSaved.setIsDeleted(false);
 			userDAO.persist(userToBeSaved);
 			userDTOtoBeSaved.setId(userToBeSaved.getId());
 			
@@ -287,7 +288,16 @@ public class UserService implements Serializable {
 	 * @return
 	 */
 	public Optional<User> getByToken(String token) {
-		return userDAO.findByToken(token, "token");
+		return userDAO.findByToken(token);
+	}
+	
+	public Role getRoleLoggedUser(String token) {
+		Optional<User> optionalUser = getByToken(token);
+		if (optionalUser.isEmpty()) {
+			return null;
+		}
+		
+		return optionalUser.get().getRole();
 	}
 
 	/**
