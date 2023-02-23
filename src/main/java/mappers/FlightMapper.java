@@ -7,8 +7,20 @@ import javax.ejb.Stateless;
 import dtos.FlightDTO;
 import entities.Flight;
 
+/**
+ * Class responsible by transform <code>Flight</code> data that transits between backend and frontend.
+ * 
+ * @author Wanderley Drumond
+ *
+ */
 @Stateless
 public class FlightMapper {
+	/**
+	 * Changes a <code>Flight</code> DTO object into a <code>Flight</code> Entity object.
+	 * 
+	 * @param flightDTO the object that will be transformed into Entity object
+	 * @return the Entity resultant object
+	 */
 	public Flight toEntity(FlightDTO flightDTO) {
 		Flight flight = new Flight();
 		
@@ -19,6 +31,12 @@ public class FlightMapper {
 		return flight;
 	}
 	
+	/**
+	 * Changes a <code>Flight</code> Entity object into a <code>Flight</code> DTO object.
+	 * 
+	 * @param flight the object that will be transformed into DTO object
+	 * @return the DTO resultant object
+	 */
 	public FlightDTO toDTO(Flight flight) {
 		FlightDTO flightDTO = new FlightDTO();
 		

@@ -1,6 +1,10 @@
 package services;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -27,28 +31,22 @@ public class FlightService implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	/**
-	 * Object that contains all user service methods.
-	 */
-	@Inject
-	UserService userService;
-	
-	/**
 	 * Object that contains all methods to manipulates database regarding flights table.
 	 */
 	@Inject
-	FlightDAO flightDAO;
+	private FlightDAO flightDAO;
 	
 	/**
 	 * Object that contains methods from <code>Flight</code> object to switch it between Entity and DTO formats.
 	 */
 	@Inject
-	FlightMapper flightMapper;
+	private FlightMapper flightMapper;
 
 	/**
 	 * Creates a new flight for the logged user.
 	 * 
 	 * @param flightDTO flight data to be inserted
-	 * @return the new flight created
+	 * @return the new flight DTO created
 	 */
 	public FlightDTO create(FlightDTO flightDTO) {
 		Flight flight = flightMapper.toEntity(flightDTO);
@@ -97,7 +95,7 @@ public class FlightService implements Serializable {
 	 * @return the resultant String, in upper case
 	 * 		  <ul> If destination have:
 	 * 			<li>At least 3 words: the first letter of the first 3 words bigger than 3 letters</li>
-	 * 			<li>Two words: the first two letters os the frist word and the first letter of the second one</li>
+	 * 			<li>Two words: the first two letters of the first word and the first letter of the second one</li>
 	 * 			<li>One single word: the first three letters</li>
 	 * 		  </ul>
 	 */
@@ -126,5 +124,33 @@ public class FlightService implements Serializable {
 		}
 	    
 		return firstLetters.toString();
+	}
+
+	// TODO to be finished after creating ticket
+	public List<FlightDTO> getAllAvailables() {
+		try {
+			List<Flight> flightsFound = flightDAO.findAllAvailables();
+			List<FlightDTO> flightsToDisplay = new ArrayList<FlightDTO>();
+			flightsToDisplay = flightsFound.stream().map(flightMapper::toDTO).collect(Collectors.toList());
+			
+			return flightsToDisplay;
+		} catch (Exception exception) {
+			System.err.println("Catch getAllAvailables() in FlightService");
+			exception.printStackTrace();
+			
+			return null;
+		}
+	}
+
+	public Optional<Flight> getById(Integer idFlight) {
+		try {
+			Optional<Flight> optionalFlightFound = flightDAO.find(idFlight);
+			
+			return optionalFlightFound;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			
+			return Optional.empty();
+		}
 	}
 }

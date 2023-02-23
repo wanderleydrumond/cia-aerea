@@ -33,13 +33,13 @@ public class UserController {
 	 * Object that contains all user service methods.
 	 */
 	@Inject
-	UserService userService;
+	private UserService userService;
 	
 	/**
 	 * Object that contains methods from <code>User</code> object to switch it between Entity and DTO formats.
 	 */
 	@Inject
-	UserMapper userMapper;
+	private UserMapper userMapper;
 
    /**
 	* Registers a new user in the system.
@@ -72,8 +72,8 @@ public class UserController {
 	/**
 	 * Creates a new user in the system for a logged user.
 	 *
-	 * @param token 			 the authorization token of the logged user
-	 * @param userDTOtoBeCreated the information for the new user to be created
+	 * @param token 			 the authorization key of the logged user
+	 * @param userDTOtoBeCreated the information of the new user to be created
 	 * @return a response with the created user information, with one of the following statuses:
 	 * 		<ul>
 	 *			<li><strong>200 (OK)</strong> and the created user information in the response body, if the user was created successfully</li>
@@ -263,13 +263,13 @@ public class UserController {
 	}
 	
 	/**
-	 * <p>Gets the user that owns the given id</p>
+	 * Gets the user that owns the given id.
 	 * 
 	 * @param token			  logged user identifier key
 	 * @param idUserToBeFound primary that identifies the user to be found
 	 * @return
 	 * 		  <ul>
-	 * 			<li><strong>401 (Unauthorized)</strong> if the user does not have a token. (Is not logged)</li>
+	 * 			<li><strong>401 (Unauthorized)</strong> if the user does not have a token. (It's not logged)</li>
 	 * 			<li><strong>400 (Bad Request)</strong> if no id for the user to be found was given</li>
 	 * 			<li><strong>200 (OK)</strong> if the requisition returned successfully the user</li>
 	 * 			<li><strong>403 (Forbidden)</strong>
@@ -343,7 +343,7 @@ public class UserController {
 			String message = "User not logged";
 			return Response.status(401).entity(message).build();
 		}
-		List<User> usersFound = new ArrayList<>();
+		List<UserDTO> usersFound = new ArrayList<>();
 		Optional<User> loggedUser = userService.getByToken(token);
 		
 		if (loggedUser.get().getRole().equals(Role.ADMINISTRATOR)) {

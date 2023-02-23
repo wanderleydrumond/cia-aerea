@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -36,13 +37,13 @@ public class UserService implements Serializable {
 	 * between Entity and DTO formats.
 	 */
 	@Inject
-	UserMapper userMapper;
+	private UserMapper userMapper;
 
 	/**
 	 * Object that contains all methods to manipulates database regarding users table.
 	 */
 	@Inject
-	UserDAO userDAO;
+	private UserDAO userDAO;
 
 	/**
 	 * Registers a new user into the system.
@@ -305,9 +306,12 @@ public class UserService implements Serializable {
 	 * 
 	 * @return A list of all users of the system
 	 */
-	public List<User> getAll() {
+	public List<UserDTO> getAll() {
 		List<User> users = userDAO.findAll();
-		return users;
+		List<UserDTO> usersDTO = new ArrayList<>();
+		usersDTO = users.stream().map(userMapper::toDTO).collect(Collectors.toList());
+		
+		return usersDTO;
 	}
 
 	
@@ -323,20 +327,22 @@ public class UserService implements Serializable {
 	 * 			<li><strong>ADMINISTRATOR</strong>, the list of all non-deleted users</li>
 	 * 		  </ul>
 	 */
-	public List<User> getAllNonDeletedByRole(Role role) {
-		List<User> users = new ArrayList<>();
+	public List<UserDTO> getAllNonDeletedByRole(Role role) {
+		List<User> users;
+		List<UserDTO> usersDTO = null;
 		try {
 			// Se o usuário logado for um empregado, ele só pode ver lista de clientes
 			if (role.equals(Role.EMPLOYEE)) {
 				users = userDAO.findAllNonDeletedByRole(Role.CLIENT);
+				usersDTO = users.stream().map(userMapper::toDTO).collect(Collectors.toList());
 			}
 			
 			// Se o usuário logado for um cliente, ele não tem nada
 			if (role.equals(Role.CLIENT)) {
-				users = null;
+				usersDTO = null;
 			}
 			
-			return users;
+			return usersDTO;
 		} catch (Exception exception) {
 			System.err.println("Catch getAllByRole() in UserService");
 			exception.printStackTrace();
