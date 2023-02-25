@@ -56,17 +56,24 @@ public class FlightDAO extends GenericDAO<Flight> {
 		}
 	}
 
-	// TODO to be finished after creating ticket
 	public List<Flight> findAllAvailables() {
-		final CriteriaQuery<Flight> CRITERIA_QUERY;
-		
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-		CRITERIA_QUERY = criteriaBuilder.createQuery(Flight.class);
-		Root<Flight> flightTable = CRITERIA_QUERY.from(Flight.class);
-		
-		CRITERIA_QUERY.select(flightTable).where(criteriaBuilder.equal(flightTable.get("totalSeats"), flightTable));
-		
-		return null;
+		try {
+			final CriteriaQuery<Flight> CRITERIA_QUERY;
+			
+			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+			CRITERIA_QUERY = criteriaBuilder.createQuery(Flight.class);
+			Root<Flight> flightTable = CRITERIA_QUERY.from(Flight.class);
+			
+			CRITERIA_QUERY.select(flightTable).where(criteriaBuilder.equal(flightTable.get("totalSeats"), flightTable));
+			
+			return null;
+		} catch (Exception exception) {
+			System.err.println("Catch Exception findAllAvailables() in FlightDAO");
+			System.err.println(exception.getClass().getName());
+			exception.printStackTrace();
+			
+			return null;
+		}
 	}
 
 }

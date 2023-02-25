@@ -15,7 +15,7 @@ public class TicketDAO extends GenericDAO<Ticket> {
 	/**
 	 * <p>The serial version identifier for this class.<p>
 	 * 
-	 * <p>This identifier is used during deserialization to verify that the sender and receiver of a serialized object have loaded classes for that object that are compatible with respect to serialization.<p>
+	 * <p>This identifier is used during deserialisation to verify that the sender and receiver of a serialised object have loaded classes for that object that are compatible with respect to serialization.<p>
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -38,7 +38,10 @@ public class TicketDAO extends GenericDAO<Ticket> {
 			Join<Flight, Ticket> ticketTable = flightTable.join("tickets");
 			
 			// Contando quantos tickets existem no voo que tem este id
-			CRITERIA_COUNT.select(criteriaBuilder.count(ticketTable)).where(criteriaBuilder.equal(flightTable.get("id"), idFlight));
+			CRITERIA_COUNT.select(criteriaBuilder.count(ticketTable)).where(
+					criteriaBuilder.and(
+							criteriaBuilder.equal(flightTable.get("id"), idFlight),
+							criteriaBuilder.equal(ticketTable.get("isCanceled"), false)));
 			Long occupiedSeats = entityManager.createQuery(CRITERIA_COUNT).getSingleResult();
 			
 			return occupiedSeats;

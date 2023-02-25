@@ -73,7 +73,16 @@ public class FlightController {
 		return Response.status(201).entity(newFlight).build();
 	}
 	
-	// TODO to be finished after creating ticket
+	/**
+	 * Gets all flights with available seats.
+	 * 
+	 * @param token the authorisation key of the logged user
+	 * @return
+	 * 		  <ul>
+	 * 			<li><strong>401 (Unauthorised)</strong> if the user does not have a token. (It's not logged)</li>
+	 * 			<li><strong>200 (OK)</strong></li>
+	 * 		  </ul>
+	 */
 	@Path("/availables")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)

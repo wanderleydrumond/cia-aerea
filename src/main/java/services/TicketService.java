@@ -25,7 +25,7 @@ public class TicketService implements Serializable {
 	/**
 	 * <p>The serial version identifier for this class.<p>
 	 * 
-	 * <p>This identifier is used during deserialization to verify that the sender and receiver of a serialized object have loaded classes for that object that are compatible with respect to serialization.<p>
+	 * <p>This identifier is used during deserialisation to verify that the sender and receiver of a serialised object have loaded classes for that object that are compatible with respect to serialization.<p>
 	 */
 	private static final long serialVersionUID = 1L;
 	
@@ -94,7 +94,7 @@ public class TicketService implements Serializable {
 			return expendableTicketDTO;
 		}
 		
-		Long occupiedSeats = ticketDAO.countOccupiedSeatsByFlightId(flight.get().getId());
+		Long occupiedSeats = getOccupiedSeatsByFlightId(flight.get().getId());
 		
 		if (flight.get().getTotalSeats() <= occupiedSeats) {
 			TicketDTO expendableTicketDTO = new TicketDTO();
@@ -115,6 +115,28 @@ public class TicketService implements Serializable {
 		ticketDTO.setIdUser(passenger.get().getId());
 		
 		return ticketDTO;
+	}
+	
+	/**
+	 * Gets the amount of occupied seats by flight according to the given id.
+	 * 
+	 * @param idFlight primary key of the flight to be checked
+	 * @return
+	 * 		  <ul> If the request was:
+	 * 			<li>Well succeeded: the amount of the occupied seats</li>
+	 * 			<li>Bad succeeded: null</li>
+	 * 		  </ul>
+	 */
+	public Long getOccupiedSeatsByFlightId(Integer idFlight) {
+		try {
+			return ticketDAO.countOccupiedSeatsByFlightId(idFlight);
+		} catch (Exception exception) {
+			System.err.println("Catch Exception countOccupiedSeatsByFlightId() in TicketService");
+			System.err.println(exception.getClass().getName());
+			exception.printStackTrace();
+			
+			return null;
+		}
 	}
 
 }

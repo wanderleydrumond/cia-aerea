@@ -40,6 +40,7 @@ public class FlightMapper {
 	public FlightDTO toDTO(Flight flight) {
 		FlightDTO flightDTO = new FlightDTO();
 		
+		flightDTO.setId(flight.getId());
 		flightDTO.setCode(flight.getCode());
 		flightDTO.setDestination(flight.getDestination());
 		flightDTO.setTotalSeats(flight.getTotalSeats());

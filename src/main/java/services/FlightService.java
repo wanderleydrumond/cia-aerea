@@ -4,12 +4,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
 import daos.FlightDAO;
+import daos.TicketDAO;
 import dtos.FlightDTO;
 import entities.Flight;
 import mappers.FlightMapper;
@@ -41,6 +41,9 @@ public class FlightService implements Serializable {
 	 */
 	@Inject
 	private FlightMapper flightMapper;
+	
+	@Inject
+	private TicketDAO ticketDAO;
 
 	/**
 	 * Creates a new flight for the logged user.
@@ -126,16 +129,36 @@ public class FlightService implements Serializable {
 		return firstLetters.toString();
 	}
 
-	// TODO to be finished after creating ticket
+	/**
+	 * Gets all flights which have available seats.
+	 * 
+	 * @return
+	 * 		  <ul>if requisition was:
+	 * 			<li>successful: the list of flights with available seats</li>
+	 * 			<li>unsuccessful: null</li>
+	 * 		  </ul>
+	 */
 	public List<FlightDTO> getAllAvailables() {
 		try {
-			List<Flight> flightsFound = flightDAO.findAllAvailables();
+			List<Flight> flightsFound = flightDAO.findAll();
 			List<FlightDTO> flightsToDisplay = new ArrayList<FlightDTO>();
-			flightsToDisplay = flightsFound.stream().map(flightMapper::toDTO).collect(Collectors.toList());
+			
+			for (Flight flightElement : flightsFound) {
+				
+				Long totalTicketsByFlight = ticketDAO.countOccupiedSeatsByFlightId(flightElement.getId());
+				Long availableSeats = flightElement.getTotalSeats() - totalTicketsByFlight;
+				
+				if (availableSeats > 0) {
+					FlightDTO flightDTO = flightMapper.toDTO(flightElement);
+					flightDTO.setFreeSeats(availableSeats.intValue());
+					flightsToDisplay.add(flightDTO);
+				}
+			}
 			
 			return flightsToDisplay;
 		} catch (Exception exception) {
 			System.err.println("Catch getAllAvailables() in FlightService");
+			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
 			
 			return null;
