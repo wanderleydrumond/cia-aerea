@@ -142,6 +142,16 @@ public class FlightService implements Serializable {
 		}
 	}
 
+	/**
+	 * Gets the flight object by the given id.
+	 * 
+	 * @param idFlight flight object primary key.
+	 * @return
+	 * 		  <ul> An Optional object which has inside:
+	 * 			<li>a flight object if the correspondent flight was found</li>
+	 * 			<li>empty if the correspondent flight was not found</li>
+	 * 		  </ul>
+	 */
 	public Optional<Flight> getById(Integer idFlight) {
 		try {
 			Optional<Flight> optionalFlightFound = flightDAO.find(idFlight);

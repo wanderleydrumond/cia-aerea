@@ -40,7 +40,7 @@ public class FlightController {
 	/**
 	 * Creates a new flight.
 	 * 
-	 * @param token		the authorization key of the logged user
+	 * @param token		the authorisation key of the logged user
 	 * @param flightDTO the information of the new flight to be created
 	 * @return
 	 * 		  <ul>

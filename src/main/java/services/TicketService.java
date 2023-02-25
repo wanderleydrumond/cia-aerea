@@ -41,9 +41,30 @@ public class TicketService implements Serializable {
 	@Inject
 	private UserService userService;
 	
+	/**
+	 * Object that contains all methods to manipulates database regarding tickets table.
+	 */
 	@Inject
 	private TicketDAO ticketDAO;
 
+	/**
+	 * Creates a new ticket.
+	 * 
+	 * @param token		the authorisation key of the logged user
+	 * @param ticketDTO the information of the new ticket to be created
+	 * @return
+	 * 		  <ul>
+	 * 			<li>null, if user who will owns the ticket/take the fight not found in database</li>
+	 * 			<li>a new ticketDTO object with it's id equal to: 
+	 * 				<ul>
+	 * 					<li>-1: if user who will buy the ticket not found in database</li>
+	 * 					<li>-2: if CLIENT tries to buy new a ticket for another user</li>
+	 * 					<li>-3: if user tries to buy a new ticket for a flight with no available seats</li>
+	 * 				</ul>
+	 * 			</li>
+	 * 			<li>the ticketDTO object, updated with its id and user id and flight id</li>
+	 * 		  </ul>
+	 */
 	public TicketDTO create(String token, TicketDTO ticketDTO) {
 		Ticket ticket = new Ticket();
 		Optional<Flight> flight = flightService.getById(ticketDTO.getIdFlight());

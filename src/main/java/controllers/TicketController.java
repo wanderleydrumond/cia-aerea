@@ -26,6 +26,37 @@ public class TicketController {
 	@Inject
 	private TicketService ticketService;
 	
+	/**
+	 * <p>Creates a new ticket.</p>
+	 * <p>Called when a user buys a new ticket.</p>
+	 * <ul>
+	 * 	<li>CLIENT: </li> allowed to buy a new ticket only to himself.
+	 * 	<li>EMPLOYEE and ADMINISTRATOR: </li> allowed to buy a new ticket for himself and any other user.
+	 * </ul>
+	 * 
+	 * @param token		  the authorisation key of the logged user
+	 * @param requestBody the information of the new ticket to be created
+	 * @return
+	 * 		  <ul>
+	 * 			<li><strong>401 (UNAUTHORIZED)</strong>
+	 * 				if:
+	 * 				<ul>
+	 * 					<li>token is null</li>
+	 * 					<li>token is empty</li>
+	 * 					<li>user who will buy the ticket not found in database</li>
+	 * 				</ul>
+	 * 			</li>
+	 * 			<li><strong>403 (FORBIDDEN)</strong> if CLIENT tries to buy new a ticket for another user
+	 * 			</li>
+	 * 			<li><strong>400 (BAD REQUEST)</strong> if:
+	 * 				<ul>
+	 * 					<li>user who will owns the ticket/take the fight not found in database</li>
+	 * 					<li>user tries to buy a new ticket for a flight with no available seats</li>
+	 * 				</ul>
+	 * 			</li>
+	 * 			<li><strong>201 (CREATED)</strong> if new ticket was successfully created</li>
+	 * 		  </ul>
+	 */
 	@Path("/create")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -55,7 +86,7 @@ public class TicketController {
 		
 		if (newTicketDTO.getId() == -3) {
 			String message = "There are no available seats from this flight";
-			return Response.status(403).entity(message).build();
+			return Response.status(400).entity(message).build();
 		}
 		
 		return Response.status(201).entity(newTicketDTO).build();

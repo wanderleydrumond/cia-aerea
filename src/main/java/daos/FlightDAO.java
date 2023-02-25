@@ -30,6 +30,11 @@ public class FlightDAO extends GenericDAO<Flight> {
 		super(Flight.class);
 	}
 	
+	/**
+	 * Finds the biggest/newest id saved in database.
+	 * 
+	 * @return the biggest/newest id found
+	 */
 	public Integer findNewestId() {
 		try {
 			final CriteriaQuery<Integer> CRITERIA_QUERY;
