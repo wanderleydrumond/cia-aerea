@@ -1,6 +1,7 @@
 package controllers;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -13,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import dtos.FlightDTO;
+import entities.User;
 import enums.Role;
 import services.FlightService;
 import services.UserService;
@@ -80,7 +82,7 @@ public class FlightController {
 	 * @return
 	 * 		  <ul>
 	 * 			<li><strong>401 (Unauthorised)</strong> if the user does not have a token. (It's not logged)</li>
-	 * 			<li><strong>200 (OK) if requisition was successfully answered</strong></li>
+	 * 			<li><strong>200 (OK)</strong> if requisition was successfully answered</li>
 	 * 		  </ul>
 	 */
 	@Path("/availables")
@@ -95,5 +97,31 @@ public class FlightController {
 		List<FlightDTO> flightsFound = flightService.getAllAvailables();
 		
 		return Response.ok(flightsFound).build();
+	}
+	
+	@Path("/all")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAll(@HeaderParam("token") String token) {
+		if (token == null || token.isBlank()) {
+			String message = "User not logged";
+			return Response.status(401).entity(message).build();
+		}
+		
+		Optional<User> loggedUser = userService.getByToken(token);
+		String message;
+		
+		if (loggedUser.isEmpty()) {
+			message = "User not found in database";
+			return Response.status(404).entity(message).build();
+		}
+		
+		if (loggedUser.isPresent() && loggedUser.get().getRole().equals(Role.CLIENT)) {
+			message = "Client cannot see flights which don't have available seats";
+			return Response.status(403).entity(message).build();
+		}
+		
+		List<FlightDTO> flightsDTO = flightService.getAll();
+		return Response.ok(flightsDTO).build();
 	}
 }

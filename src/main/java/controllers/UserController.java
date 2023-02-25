@@ -195,7 +195,7 @@ public class UserController {
 		String message;
 		if (token == null || token.isBlank() || idUserToBeUpdated == null) {
 			message = "No token in logged user or no id in user to be updated";
-			return Response.status(403).entity(message).build();
+			return Response.status(401).entity(message).build();
 		}
 		
 		Optional<User> loggedUser = userService.getByToken(token);

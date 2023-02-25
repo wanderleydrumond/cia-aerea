@@ -186,4 +186,13 @@ public class FlightService implements Serializable {
 			return Optional.empty();
 		}
 	}
+
+	public List<FlightDTO> getAll() {
+		List<Flight> flights = flightDAO.findAll();
+		List<FlightDTO> flightsDTO = new ArrayList<>();
+		
+		flights.forEach(flightElement -> flightsDTO.add(flightMapper.toDTO(flightElement)));
+		
+		return flightsDTO;
+	}
 }
