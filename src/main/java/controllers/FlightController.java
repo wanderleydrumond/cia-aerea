@@ -80,7 +80,7 @@ public class FlightController {
 	 * @return
 	 * 		  <ul>
 	 * 			<li><strong>401 (Unauthorised)</strong> if the user does not have a token. (It's not logged)</li>
-	 * 			<li><strong>200 (OK)</strong></li>
+	 * 			<li><strong>200 (OK) if requisition was successfully answered</strong></li>
 	 * 		  </ul>
 	 */
 	@Path("/availables")

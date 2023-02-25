@@ -1,7 +1,5 @@
 package daos;
 
-import java.util.List;
-
 import javax.ejb.Stateless;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -55,25 +53,4 @@ public class FlightDAO extends GenericDAO<Flight> {
 			return null;
 		}
 	}
-
-	public List<Flight> findAllAvailables() {
-		try {
-			final CriteriaQuery<Flight> CRITERIA_QUERY;
-			
-			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-			CRITERIA_QUERY = criteriaBuilder.createQuery(Flight.class);
-			Root<Flight> flightTable = CRITERIA_QUERY.from(Flight.class);
-			
-			CRITERIA_QUERY.select(flightTable).where(criteriaBuilder.equal(flightTable.get("totalSeats"), flightTable));
-			
-			return null;
-		} catch (Exception exception) {
-			System.err.println("Catch Exception findAllAvailables() in FlightDAO");
-			System.err.println(exception.getClass().getName());
-			exception.printStackTrace();
-			
-			return null;
-		}
-	}
-
 }
