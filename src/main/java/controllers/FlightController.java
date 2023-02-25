@@ -99,6 +99,18 @@ public class FlightController {
 		return Response.ok(flightsFound).build();
 	}
 	
+	/**
+	 * Gets all flights, crowded and with available seats.
+	 * 
+	 * @param token the authorisation key of the logged user
+	 * @return
+	 * 		  <ul>
+	 * 			<li><strong>401 (Unauthorised)</strong> If the token is not present</li>
+	 * 			<li><strong>403 (Forbidden)</strong> If user is logged as CLIENT</li>
+	 * 			<li><strong>404 (Not Found)</strong> If the logged user is not found in the database</li>
+	 * 			<li><strong>200 (OK)</strong> If the requisition is successful (with flights list)</li>
+	 * 		  </ul>
+	 */
 	@Path("/all")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)

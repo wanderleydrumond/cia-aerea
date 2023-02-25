@@ -187,6 +187,11 @@ public class FlightService implements Serializable {
 		}
 	}
 
+	/**
+	 * Gets all flights, crowded and with available seats.
+	 * 
+	 * @return the flights DTO list
+	 */
 	public List<FlightDTO> getAll() {
 		List<Flight> flights = flightDAO.findAll();
 		List<FlightDTO> flightsDTO = new ArrayList<>();
