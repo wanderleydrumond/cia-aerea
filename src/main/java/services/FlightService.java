@@ -42,6 +42,9 @@ public class FlightService implements Serializable {
 	@Inject
 	private FlightMapper flightMapper;
 	
+	/**
+	 * Object that contains all methods to manipulates database regarding tickets table.
+	 */
 	@Inject
 	private TicketDAO ticketDAO;
 

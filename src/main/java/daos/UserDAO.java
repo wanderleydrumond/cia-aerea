@@ -61,6 +61,7 @@ public class UserDAO extends GenericDAO<User> {
 			return entityManager.createQuery(CRITERIA_QUERY).getResultList().stream().findFirst();
 		} catch (Exception exception) {
 			System.err.println("Catch findByToken() in UserDAO");
+			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
 
 			return null;
@@ -91,6 +92,7 @@ public class UserDAO extends GenericDAO<User> {
 			return entityManager.createQuery(CRITERIA_QUERY).getResultList();
 		} catch (Exception exception) {
 			System.err.println("Catch findAllByToken() in UserDAO");
+			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
 			
 			return null;
@@ -122,6 +124,7 @@ public class UserDAO extends GenericDAO<User> {
 			return entityManager.createQuery(CRITERIA_QUERY).getSingleResult();
 		} catch (Exception exception) {
 			System.err.println("Catch signIn() in UserDAO");
+			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
 			
 			return null;
@@ -147,6 +150,7 @@ public class UserDAO extends GenericDAO<User> {
 			return entityManager.createQuery(CRITERIA_UPDATE).executeUpdate();
 		} catch (Exception exception) {
 			System.err.println("Catch signOut() in UserDAO");
+			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
 			
 			return null;
@@ -188,10 +192,12 @@ public class UserDAO extends GenericDAO<User> {
 			return typedQuery.getSingleResult();
 		} catch (NoResultException noResultException) { // Esse catch é esperado quando nenhum resultado é encontrado.
 			System.out.println("Catch NoResultException in exists() in UserDAO.");
+			System.err.println(noResultException.getClass().getName());
 			
 			return false;
 		} catch (Exception exception) {
 			System.err.println("Catch exists() in UserDAO");
+			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
 			
 			return null;

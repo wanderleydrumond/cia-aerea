@@ -1,16 +1,24 @@
 package controllers;
 
+import java.util.List;
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import dtos.TicketDTO;
+import entities.User;
+import enums.Role;
 import services.TicketService;
+import services.UserService;
 
 /**
  * Class that contains all requisition methods that refers to ticket.
@@ -25,6 +33,12 @@ public class TicketController {
 	 */
 	@Inject
 	private TicketService ticketService;
+	
+	/**
+	 * Object that contains all user service methods.
+	 */
+	@Inject
+	UserService userService;
 	
 	/**
 	 * <p>Creates a new ticket.</p>
@@ -90,5 +104,33 @@ public class TicketController {
 		}
 		
 		return Response.status(201).entity(newTicketDTO).build();
+	}
+	
+	@Path("/by-user/{userId}")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getByUserId(@HeaderParam("token") String token, @PathParam("userId") String id) {
+		String message;
+		
+		if (token == null || token.isBlank()) {
+			message = "User not logged";
+			return Response.status(401).entity(message).build();
+		}
+		
+		Optional<User> loggedUser = userService.getByToken(token);
+		
+		if (loggedUser.isEmpty()) {
+			message = "User not found in database";
+			return Response.status(404).entity(message).build();
+		}
+		
+		if (loggedUser.isPresent() && loggedUser.get().getRole().equals(Role.CLIENT)) {
+			message = "Client cannot see tickets from another user";
+			return Response.status(403).entity(message).build();
+		}
+		
+		List<TicketDTO> ticketDTO = ticketService.getByUserId(Integer.parseInt(id));
+		
+		return Response.ok(ticketDTO).build();
 	}
 }

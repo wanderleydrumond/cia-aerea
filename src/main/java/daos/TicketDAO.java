@@ -1,5 +1,7 @@
 package daos;
 
+import java.util.List;
+
 import javax.ejb.Stateless;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -8,6 +10,7 @@ import javax.persistence.criteria.Root;
 
 import entities.Flight;
 import entities.Ticket;
+import entities.User;
 
 @Stateless
 public class TicketDAO extends GenericDAO<Ticket> {
@@ -49,6 +52,26 @@ public class TicketDAO extends GenericDAO<Ticket> {
 			System.err.println("Catch Exception countOccupiedSeatsByFlightId() in TicketDAO");
 			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
+			
+			return null;
+		}
+	}
+
+	public List<Ticket> findTicketsByUserId(int userId) {
+		try {
+			final CriteriaQuery<Ticket> CRITERIA_QUERY;
+			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+			CRITERIA_QUERY = criteriaBuilder.createQuery(Ticket.class);
+			Root<Ticket> ticketTable = CRITERIA_QUERY.from(Ticket.class);
+			Join<Ticket, User> userTable = ticketTable.join("passenger");
+			
+			CRITERIA_QUERY.select(ticketTable).where(criteriaBuilder.equal(userTable.get("id"), userId));
+			
+			return entityManager.createQuery(CRITERIA_QUERY).getResultList();
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " findTicketByUserId() in TicketDAO");
+			exception.printStackTrace();
+			
 			return null;
 		}
 	}

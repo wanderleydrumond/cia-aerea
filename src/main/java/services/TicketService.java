@@ -1,6 +1,8 @@
 package services;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.enterprise.context.RequestScoped;
@@ -132,6 +134,35 @@ public class TicketService implements Serializable {
 			return ticketDAO.countOccupiedSeatsByFlightId(idFlight);
 		} catch (Exception exception) {
 			System.err.println("Catch Exception countOccupiedSeatsByFlightId() in TicketService");
+			System.err.println(exception.getClass().getName());
+			exception.printStackTrace();
+			
+			return null;
+		}
+	}
+
+	public List<TicketDTO> getByUserId(int userId) {
+		try {
+			List<Ticket> ticketsFound = ticketDAO.findTicketsByUserId(userId);
+			TicketDTO ticketDTO = new TicketDTO();
+			List<TicketDTO> ticketsDTO = new ArrayList<>();
+			
+			ticketsFound.forEach(ticketElement -> {
+				ticketDTO.setId(ticketElement.getId());
+				ticketDTO.setIdFlight(ticketElement.getFlightDetails().getId());
+				ticketDTO.setIdUser(ticketElement.getPassenger().getId());
+				ticketDTO.setFlightCode(ticketElement.getFlightDetails().getCode());
+				ticketDTO.setUserName(ticketElement.getPassenger().getName());
+				ticketDTO.setFlightDestination(ticketElement.getFlightDetails().getDestination());
+				ticketDTO.setFlightDepartTime(ticketElement.getFlightDetails().getDepartTime().toString());
+				
+				ticketsDTO.add(ticketDTO);
+			});
+			
+			
+			return ticketsDTO;
+		} catch (Exception exception) {
+			System.err.println("Catch Exception getByUserId() in TicketService");
 			System.err.println(exception.getClass().getName());
 			exception.printStackTrace();
 			
