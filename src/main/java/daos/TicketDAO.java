@@ -26,6 +26,16 @@ public class TicketDAO extends GenericDAO<Ticket> {
 		super(Ticket.class);
 	}
 	
+	/**
+	 * Count the amount of occupied seats of the given id flight.
+	 * 
+	 * @param idFlight primary key of the flight
+	 * @return
+	 * 		  <ul> If the query was:
+	 * 			<li>Well succeeded: the amount of occupied seats</li>
+	 * 			<li>Bad succeeded: null</li>
+	 * 		  </ul>
+	 */
 	public Long countOccupiedSeatsByFlightId(Integer idFlight) {
 		try {
 			final CriteriaQuery<Long> CRITERIA_COUNT;
@@ -49,14 +59,23 @@ public class TicketDAO extends GenericDAO<Ticket> {
 			
 			return occupiedSeats;
 		} catch (Exception exception) {
-			System.err.println("Catch Exception countOccupiedSeatsByFlightId() in TicketDAO");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " countOccupiedSeatsByFlightId() in TicketDAO");
 			exception.printStackTrace();
 			
 			return null;
 		}
 	}
 
+	/**
+	 * Finds the list of tickets from the given user id.
+	 * 
+	 * @param userId primary key of the user that owns the ticket
+	 * @return
+	 * 		  <ul> If the query was:
+	 * 			<li>Well succeeded: the list of tickets</li>
+	 * 			<li>Bad succeeded: null</li>
+	 * 		  </ul>
+	 */
 	public List<Ticket> findTicketsByUserId(int userId) {
 		try {
 			final CriteriaQuery<Ticket> CRITERIA_QUERY;

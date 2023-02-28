@@ -1,6 +1,8 @@
 package services;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -133,14 +135,23 @@ public class TicketService implements Serializable {
 		try {
 			return ticketDAO.countOccupiedSeatsByFlightId(idFlight);
 		} catch (Exception exception) {
-			System.err.println("Catch Exception countOccupiedSeatsByFlightId() in TicketService");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " countOccupiedSeatsByFlightId() in TicketService");
 			exception.printStackTrace();
 			
 			return null;
 		}
 	}
 
+	/**
+	 * Gets the list of tickets for the given user id.
+	 * 
+	 * @param userId primary key of the user that owns the ticket
+	 * @return
+	 * 		  <ul> If the request was:
+	 * 			<li>Well succeeded: the list of tickets DTO</li>
+	 * 			<li>Bad succeeded: null</li>
+	 * 		  </ul>
+	 */
 	public List<TicketDTO> getByUserId(int userId) {
 		try {
 			List<Ticket> ticketsFound = ticketDAO.findTicketsByUserId(userId);
@@ -162,12 +173,73 @@ public class TicketService implements Serializable {
 			
 			return ticketsDTO;
 		} catch (Exception exception) {
-			System.err.println("Catch Exception getByUserId() in TicketService");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " getByUserId() in TicketService");
 			exception.printStackTrace();
 			
 			return null;
 		}
 	}
 
+	/**
+	 * Sets the attribute isCanceled in <code>Ticket</code> object in database to true.
+	 * 
+	 * @param token		the authorisation key of the logged user
+	 * @param ticketId	the primary key of the ticket
+	 * @return
+	 * 		  <ul>
+	 * 			<li>A new <code>TicketDTO</code> with id:</li>
+	 * 			<ul>
+	 * 				<li><strong>-1</strong> if ticket was not found in database</li>
+	 * 				<li><strong>-2</strong> if ticket is already cancelled</li>
+	 * 				<li><strong>-3</strong> if date of action is not earlier that 1 day</li>
+	 * 				<li><strong>-4</strong> if a client tries to cancel another user ticket</li>
+	 * 			</ul>
+	 * 				<li>A <code>TicketDTO</code> updated if everything goes well</li>
+	 * 		  </ul>
+	 */
+	public TicketDTO cancelById(String token, int ticketId) {
+		Optional<Ticket> optionalTicket = ticketDAO.find(ticketId);
+		Flight flight = optionalTicket.get().getFlightDetails();
+		User passenger = optionalTicket.get().getPassenger();
+		Optional<User> loggedUser = userService.getByToken(token);
+		TicketDTO ticketDTO = new TicketDTO();
+		LocalDateTime oneDayEarlierDepart = flight.getDepartTime().toLocalDateTime().minusDays(1);
+		
+		// Se não encontrar o ticket com o id fornecido
+		if (optionalTicket.isEmpty()) {
+			ticketDTO.setId(-1);
+			return ticketDTO;
+		}
+		
+		// Se o ticket já estiver cancelado
+		if (optionalTicket.get().getIsCanceled().equals(true)) {
+			ticketDTO.setId(-2);
+			return ticketDTO;
+		}
+		
+		// Se a data do ticket for menor que 1 dia
+		if (!LocalDateTime.now().isBefore(oneDayEarlierDepart)) {
+			ticketDTO.setId(-3);
+			return ticketDTO;
+		}
+		
+		// Se o user for client e tentar cancelar de outro user
+		if (loggedUser.get().getRole().equals(Role.CLIENT) && loggedUser.get().getId() != passenger.getId()) {
+			ticketDTO.setId(-4);
+			return ticketDTO;
+		}
+		
+		optionalTicket.get().setIsCanceled(true);
+		ticketDAO.merge(optionalTicket.get());
+		
+		ticketDTO.setId(optionalTicket.get().getId());
+		ticketDTO.setIdFlight(flight.getId());
+		ticketDTO.setFlightCode(flight.getCode());
+		ticketDTO.setFlightDestination(flight.getDestination());
+		ticketDTO.setFlightDepartTime(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(flight.getDepartTime()));
+		ticketDTO.setIdUser(passenger.getId());
+		ticketDTO.setUserName(passenger.getName());
+		
+		return ticketDTO;
+	}
 }

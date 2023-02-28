@@ -65,7 +65,7 @@ public class UserService implements Serializable {
 
 			return true;
 		} catch (Exception exception) {
-			System.err.println("Catch signUp() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in signUp() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -100,7 +100,7 @@ public class UserService implements Serializable {
 
 			return null;
 		} catch (Exception exception) {
-			System.err.println("Catch validateLoggedUserRole() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in validateLoggedUserRole() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -143,7 +143,7 @@ public class UserService implements Serializable {
 			
 			return userDTOtoBeSaved;
 		} catch (Exception exception) {
-			System.err.println("Catch save() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in save() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -181,6 +181,7 @@ public class UserService implements Serializable {
 			
 			return userMapper.toDTO(userToBeUpdated);
 		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in update() in UserService");
 			exception.printStackTrace();
 			
 			return null;
@@ -211,7 +212,7 @@ public class UserService implements Serializable {
 
 			return user.getToken();
 		} catch (Exception exception) {
-			System.err.println("Catch signIn() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in signIn() in UserService");
 			exception.printStackTrace();
 			
 			return null;
@@ -244,7 +245,7 @@ public class UserService implements Serializable {
 				return null;
 			}
 		} catch (Exception exception) {
-			System.err.println("Catch signOut() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in signOut() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -275,7 +276,7 @@ public class UserService implements Serializable {
 			
 			return optionalUser;
 		} catch (Exception exception) {
-			System.err.println("Catch getById() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in getById() in UserService");
 			exception.printStackTrace();
 			
 			return null;
@@ -293,12 +294,18 @@ public class UserService implements Serializable {
 	}
 	
 	public Role getRoleLoggedUser(String token) {
-		Optional<User> optionalUser = getByToken(token);
-		if (optionalUser.isEmpty()) {
+		try {
+			Optional<User> optionalUser = getByToken(token);
+			if (optionalUser.isEmpty()) {
+				return null;
+			}
+			
+			return optionalUser.get().getRole();
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in getRoleLoggedUser() in UserService");
+			exception.printStackTrace();
 			return null;
 		}
-		
-		return optionalUser.get().getRole();
 	}
 
 	/**
@@ -307,11 +314,17 @@ public class UserService implements Serializable {
 	 * @return A list of all users of the system
 	 */
 	public List<UserDTO> getAll() {
-		List<User> users = userDAO.findAll();
-		List<UserDTO> usersDTO = new ArrayList<>();
-		usersDTO = users.stream().map(userMapper::toDTO).collect(Collectors.toList());
-		
-		return usersDTO;
+		try {
+			List<User> users = userDAO.findAll();
+			List<UserDTO> usersDTO = new ArrayList<>();
+			usersDTO = users.stream().map(userMapper::toDTO).collect(Collectors.toList());
+			
+			return usersDTO;
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in getAll() in UserService");
+			exception.printStackTrace();
+			return null;
+		}
 	}
 
 	
@@ -344,7 +357,7 @@ public class UserService implements Serializable {
 			
 			return usersDTO;
 		} catch (Exception exception) {
-			System.err.println("Catch getAllByRole() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in getAllByRole() in UserService");
 			exception.printStackTrace();
 			return null;
 		}
