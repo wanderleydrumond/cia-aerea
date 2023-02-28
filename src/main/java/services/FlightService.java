@@ -160,8 +160,7 @@ public class FlightService implements Serializable {
 			
 			return flightsToDisplay;
 		} catch (Exception exception) {
-			System.err.println("Catch getAllAvailables() in FlightService");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " in getAllAvailables() in FlightService");
 			exception.printStackTrace();
 			
 			return null;
@@ -184,6 +183,7 @@ public class FlightService implements Serializable {
 			
 			return optionalFlightFound;
 		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in getById() in FlightService");
 			exception.printStackTrace();
 			
 			return Optional.empty();
@@ -196,11 +196,18 @@ public class FlightService implements Serializable {
 	 * @return the flights DTO list
 	 */
 	public List<FlightDTO> getAll() {
-		List<Flight> flights = flightDAO.findAll();
-		List<FlightDTO> flightsDTO = new ArrayList<>();
-		
-		flights.forEach(flightElement -> flightsDTO.add(flightMapper.toDTO(flightElement)));
-		
-		return flightsDTO;
+		try {
+			List<Flight> flights = flightDAO.findAll();
+			List<FlightDTO> flightsDTO = new ArrayList<>();
+			
+			flights.forEach(flightElement -> flightsDTO.add(flightMapper.toDTO(flightElement)));
+			
+			return flightsDTO;
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in getAll() in FlightService");
+			exception.printStackTrace();
+			
+			return null;
+		}
 	}
 }

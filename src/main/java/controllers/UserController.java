@@ -184,7 +184,7 @@ public class UserController {
 	 * 			</li>
  	 * 			<li><strong>404 (Not Found)</strong> if the logged user or the user who will be updated wasn't found in the database</li>
  	 * 			<li><strong>503 (Service Unavailable)</strong> if there was some issue with the database</li> 
- 	 * 			<li><strong>200 (OK)</strong> if the used was successfully updated</li>
+ 	 * 			<li><strong>200 (OK)</strong> if the user was successfully updated</li>
 	 * 		  </ul>
 	 */
 	@Path("/update/{id}")
@@ -269,7 +269,7 @@ public class UserController {
 	 * @param idUserToBeFound primary that identifies the user to be found
 	 * @return
 	 * 		  <ul>
-	 * 			<li><strong>401 (Unauthorized)</strong> if the user does not have a token. (It's not logged)</li>
+	 * 			<li><strong>401 (Unauthorised)</strong> if the user does not have a token. (It's not logged)</li>
 	 * 			<li><strong>400 (Bad Request)</strong> if no id for the user to be found was given</li>
 	 * 			<li><strong>200 (OK)</strong> if the requisition returned successfully the user</li>
 	 * 			<li><strong>403 (Forbidden)</strong>
@@ -284,13 +284,15 @@ public class UserController {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getById(@HeaderParam("token") String token, @PathParam("id") String idUserToBeFound) {
+		String message;
+		
 		if (token == null || token.isBlank()) {
-			String message = "User not logged";
+			message = "User not logged";
 			return Response.status(401).entity(message).build();
 		}
 		
 		if (idUserToBeFound == null || idUserToBeFound.isBlank()) {
-			String message = "User to be found id is mandatory";
+			message = "User to be found id is mandatory";
 			return Response.status(400).entity(message).build();
 		}
 		
@@ -299,23 +301,23 @@ public class UserController {
 		
 		if (loggedUser.isPresent() && userToBeFound.isPresent()) {
 			if (loggedUser.get().getRole().equals(Role.CLIENT) && loggedUser.get().getId() != userToBeFound.get().getId()) {
-				String message = "A client is not allowed to see other users data";
+				message = "A client is not allowed to see other users data";
 				return Response.status(403).entity(message).build();
 			}
 			
 			if (loggedUser.get().getRole().equals(Role.EMPLOYEE)) {
 				if (userToBeFound.get().getRole().equals(Role.EMPLOYEE) && userToBeFound.get().getId() != loggedUser.get().getId()) {
-					String message = "An employee is not allowed to see other users data with role EMPLOYEE";
+					message = "An employee is not allowed to see other users data with role EMPLOYEE";
 					return Response.status(403).entity(message).build();
 				}
 				
 				if (userToBeFound.get().getRole().equals(Role.ADMINISTRATOR)) {
-					String message = "An employee is not allowed to see other users data with role ADMINISTRATOR";
+					message = "An employee is not allowed to see other users data with role ADMINISTRATOR";
 					return Response.status(403).entity(message).build();
 				}
 			}
 		} else {
-			String message = "User not found in database";
+			message = "User not found in database";
 			return Response.status(401).entity(message).build();
 		}
 		
@@ -330,7 +332,7 @@ public class UserController {
 	 * @param token logged user identifier key
 	 * @return
 	 * 		  <ul>
-	 * 			<li><strong>401 (Unauthorized)</strong> if the user does not have a token. (Is not logged)</li>
+	 * 			<li><strong>401 (Unauthorised)</strong> if the user does not have a token. (Is not logged)</li>
 	 * 			<li><strong>200 (OK)</strong> if the requisition returned successfully the users list</li>
 	 * 			<li><strong>403 (Forbidden)</strong>if the logged user is a client</li>
 	 * 		  </ul>
@@ -339,12 +341,19 @@ public class UserController {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAll(@HeaderParam("token") String token) {
+		String message;
+		
 		if (token == null || token.isBlank()) {
-			String message = "User not logged";
+			message = "User not logged";
 			return Response.status(401).entity(message).build();
 		}
 		List<UserDTO> usersFound = new ArrayList<>();
 		Optional<User> loggedUser = userService.getByToken(token);
+		
+		if (loggedUser == null) {
+			message = "Logged user not found in database";
+			return Response.status(401).entity(message).build();
+		}
 		
 		if (loggedUser.get().getRole().equals(Role.ADMINISTRATOR)) {
 			usersFound = userService.getAll();
@@ -353,10 +362,69 @@ public class UserController {
 		}
 		
 		if (usersFound == null) {
-			String message = "Clients don't have permission to see other users";
+			message = "Clients don't have permission to see other users";
 			return Response.status(403).entity(message).build();
 		}
 		
 		return Response.ok(usersFound).build();
+	}
+	
+	/**
+	 * Soft delete an user their tickets.
+	 * 
+	 * @param token logged user identifier key
+	 * @param id	primary that identifies the user to be soft deleted
+	 * @return
+	 * 		  <ul>
+	 * 			<li>
+	 * 				<strong>401 (Unauthorised)</strong> If: 
+	 * 				<ul>
+	 * 					<li>token is null</li>
+	 * 					<li>token is empty</li>
+	 * 					<li>token informed not found in database</li>
+	 * 				</ul>
+	 * 		  	</li>
+	 * 			<li><strong>400 (Bad Request)</strong> If user to be deleted was not found in database</li>
+	 * 			<li><strong>403 (Forbidden)</strong>If user role is CLIENT and they are trying to delete another user</li>
+	 * 			<li><strong>200 (OK)</strong>If user was soft deleted successfully</li>
+	 * 		  </ul>
+	 */
+	@Path("/delete-by/{userId}")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response softDeleteById(@HeaderParam("token") String token, @PathParam("userId") String id) {
+		String message;
+		
+		if (token == null || token.isBlank()) {
+			message = "User not logged";
+			return Response.status(401).entity(message).build();
+		}
+		
+		Optional<User> loggedUser = userService.getByToken(token);
+		Optional<User> userToDelete = userService.getById(Integer.parseInt(id));
+		
+		if (loggedUser == null) {
+			message = "User logged not found in database";
+			return Response.status(401).entity(message).build();
+		}
+		
+		if (userToDelete.isEmpty()) {
+			message = "User to delete not found in database";
+			return Response.status(404).entity(message).build();
+		}
+		
+		if (userToDelete.get().getRole().equals(Role.CLIENT) && userToDelete.get().getId() != loggedUser.get().getId()) {
+			message = "Clients cannot delete other users";
+			return Response.status(403).entity(message).build();
+		}
+		
+		UserDTO userDTO = userService.softDelete(userToDelete.get());
+		
+		if (userDTO.getId() == null) {
+			message = "User has future non canceled flights";
+			return Response.status(400).entity(message).build();
+		}
+		
+		return Response.ok(userDTO).build();
 	}
 }

@@ -44,6 +44,12 @@ public class UserService implements Serializable {
 	 */
 	@Inject
 	private UserDAO userDAO;
+	
+	/**
+	 * Object that contains all ticket service methods.
+	 */
+	@Inject
+	private TicketService ticketService;
 
 	/**
 	 * Registers a new user into the system.
@@ -65,7 +71,7 @@ public class UserService implements Serializable {
 
 			return true;
 		} catch (Exception exception) {
-			System.err.println("Catch signUp() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in signUp() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -100,7 +106,7 @@ public class UserService implements Serializable {
 
 			return null;
 		} catch (Exception exception) {
-			System.err.println("Catch validateLoggedUserRole() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in validateLoggedUserRole() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -143,7 +149,7 @@ public class UserService implements Serializable {
 			
 			return userDTOtoBeSaved;
 		} catch (Exception exception) {
-			System.err.println("Catch save() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in save() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -181,6 +187,7 @@ public class UserService implements Serializable {
 			
 			return userMapper.toDTO(userToBeUpdated);
 		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in update() in UserService");
 			exception.printStackTrace();
 			
 			return null;
@@ -211,7 +218,7 @@ public class UserService implements Serializable {
 
 			return user.getToken();
 		} catch (Exception exception) {
-			System.err.println("Catch signIn() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in signIn() in UserService");
 			exception.printStackTrace();
 			
 			return null;
@@ -244,7 +251,7 @@ public class UserService implements Serializable {
 				return null;
 			}
 		} catch (Exception exception) {
-			System.err.println("Catch signOut() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in signOut() in UserService");
 			exception.printStackTrace();
 
 			return null;
@@ -275,7 +282,7 @@ public class UserService implements Serializable {
 			
 			return optionalUser;
 		} catch (Exception exception) {
-			System.err.println("Catch getById() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in getById() in UserService");
 			exception.printStackTrace();
 			
 			return null;
@@ -292,13 +299,33 @@ public class UserService implements Serializable {
 		return userDAO.findByToken(token);
 	}
 	
+	/**
+	 * Gets the role of the logged user
+	 * 
+	 * @param token logged user identifier key
+	 * @return
+	 * 		  <ul>
+	 * 			<li>null, if:</li>
+	 * 				<ul>
+	 * 					<li>logged user was not found in database</li>
+	 * 					<li>any error occurs in database</li>
+	 * 				</ul>
+	 * 			<li>Role of the logged user</li>
+	 * 		  </ul>
+	 */
 	public Role getRoleLoggedUser(String token) {
-		Optional<User> optionalUser = getByToken(token);
-		if (optionalUser.isEmpty()) {
+		try {
+			Optional<User> optionalUser = getByToken(token);
+			if (optionalUser.isEmpty()) {
+				return null;
+			}
+			
+			return optionalUser.get().getRole();
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in getRoleLoggedUser() in UserService");
+			exception.printStackTrace();
 			return null;
 		}
-		
-		return optionalUser.get().getRole();
 	}
 
 	/**
@@ -307,11 +334,17 @@ public class UserService implements Serializable {
 	 * @return A list of all users of the system
 	 */
 	public List<UserDTO> getAll() {
-		List<User> users = userDAO.findAll();
-		List<UserDTO> usersDTO = new ArrayList<>();
-		usersDTO = users.stream().map(userMapper::toDTO).collect(Collectors.toList());
-		
-		return usersDTO;
+		try {
+			List<User> users = userDAO.findAll();
+			List<UserDTO> usersDTO = new ArrayList<>();
+			usersDTO = users.stream().map(userMapper::toDTO).collect(Collectors.toList());
+			
+			return usersDTO;
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in getAll() in UserService");
+			exception.printStackTrace();
+			return null;
+		}
 	}
 
 	
@@ -344,8 +377,44 @@ public class UserService implements Serializable {
 			
 			return usersDTO;
 		} catch (Exception exception) {
-			System.err.println("Catch getAllByRole() in UserService");
+			System.err.println("Catch " + exception.getClass().getName() + " in getAllByRole() in UserService");
 			exception.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * Soft deletes an user and their tickets.
+	 * 
+	 * @param user to be deleted
+	 * @return
+	 * 		  <ul>
+	 * 			<li>new empty <code>UserDTO</code> if amount of non cancelled tickets with date in the future was found</li>
+	 * 			<li><code>UserDTO</code> with all updated data if the user was successfully soft deleted</li>
+	 * 			<li>null, if occurs any errors in database</li>
+	 * 		  </ul>
+	 */
+	public UserDTO softDelete(User user) {
+		try {
+			Integer amountNonCancelledTicketsWithFutureFlight = ticketService.getAllNonDeletedWithFutureFlightByUserId(user.getId());
+			
+			if (amountNonCancelledTicketsWithFutureFlight > 0) {
+				return new UserDTO();
+			}
+			
+			user.setIsDeleted(true);
+			
+			userDAO.merge(user);
+			
+			UserDTO userDTO = userMapper.toDTO(user);
+			
+			ticketService.softDeleteByUserId(user.getId());
+			
+			return userDTO;
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " in softDelete() in UserService");
+			exception.printStackTrace();
+			
 			return null;
 		}
 	}

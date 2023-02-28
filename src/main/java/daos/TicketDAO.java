@@ -1,11 +1,13 @@
 package daos;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import javax.ejb.Stateless;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import entities.Flight;
@@ -26,6 +28,16 @@ public class TicketDAO extends GenericDAO<Ticket> {
 		super(Ticket.class);
 	}
 	
+	/**
+	 * Count the amount of occupied seats of the given id flight.
+	 * 
+	 * @param idFlight primary key of the flight
+	 * @return
+	 * 		  <ul> If the query was:
+	 * 			<li>Well succeeded: the amount of occupied seats</li>
+	 * 			<li>Bad succeeded: null</li>
+	 * 		  </ul>
+	 */
 	public Long countOccupiedSeatsByFlightId(Integer idFlight) {
 		try {
 			final CriteriaQuery<Long> CRITERIA_COUNT;
@@ -49,14 +61,23 @@ public class TicketDAO extends GenericDAO<Ticket> {
 			
 			return occupiedSeats;
 		} catch (Exception exception) {
-			System.err.println("Catch Exception countOccupiedSeatsByFlightId() in TicketDAO");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " countOccupiedSeatsByFlightId() in TicketDAO");
 			exception.printStackTrace();
 			
 			return null;
 		}
 	}
 
+	/**
+	 * Finds the list of tickets from the given user id.
+	 * 
+	 * @param userId primary key of the user that owns the ticket
+	 * @return
+	 * 		  <ul> If the query was:
+	 * 			<li>Well succeeded: the list of tickets</li>
+	 * 			<li>Bad succeeded: null</li>
+	 * 		  </ul>
+	 */
 	public List<Ticket> findTicketsByUserId(int userId) {
 		try {
 			final CriteriaQuery<Ticket> CRITERIA_QUERY;
@@ -76,4 +97,39 @@ public class TicketDAO extends GenericDAO<Ticket> {
 		}
 	}
 
+	/**
+	 * Counts the amount of active tickets that have not yet taken place for the given user id.
+	 * 
+	 * @param userId primary key of the user to have their tickets count
+	 * @return
+	 * 		  <ul>
+	 * 			<li>the amount tickets, if the requisition was successfully</li>
+	 * 			<li>null, if any errors occurred</li>
+	 * 		  </ul>
+	 */
+	public Integer countAllNonDeletedWithFutureFlightByUserId(Integer userId) {
+		try {
+			final CriteriaQuery<Ticket> CRITERIA_QUERY;
+			CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+			CRITERIA_QUERY = criteriaBuilder.createQuery(Ticket.class);
+			Root<Ticket> ticketTable = CRITERIA_QUERY.from(Ticket.class);
+			Join<Ticket, User> userTable = ticketTable.join("passenger");
+			Join<Ticket, Flight> flightTable = ticketTable.join("flightDetails");
+			
+			Predicate predicateTicketNonCancelled = criteriaBuilder.equal(ticketTable.get("isCanceled"), false);
+			Predicate predicateUserId = criteriaBuilder.equal(userTable.get("id"), userId);
+			Predicate predicateFlightDate = criteriaBuilder.greaterThan(flightTable.get("departTime").as(Timestamp.class), criteriaBuilder.currentTimestamp());
+			
+			Predicate[] predicates = {predicateTicketNonCancelled, predicateUserId, predicateFlightDate};
+			
+			CRITERIA_QUERY.select(ticketTable).where(predicates);
+			
+			return entityManager.createQuery(CRITERIA_QUERY).getResultList().size();
+		} catch (Exception exception) {
+			System.err.println("Catch " + exception.getClass().getName() + " findAllNonDeletedWithFutureFlightByUserId() in TicketDAO");
+			exception.printStackTrace();
+			
+			return null;
+		}
+	}
 }

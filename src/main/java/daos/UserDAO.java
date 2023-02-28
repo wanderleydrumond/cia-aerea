@@ -60,8 +60,7 @@ public class UserDAO extends GenericDAO<User> {
 
 			return entityManager.createQuery(CRITERIA_QUERY).getResultList().stream().findFirst();
 		} catch (Exception exception) {
-			System.err.println("Catch findByToken() in UserDAO");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " in findByToken() in UserDAO");
 			exception.printStackTrace();
 
 			return null;
@@ -91,8 +90,7 @@ public class UserDAO extends GenericDAO<User> {
 			
 			return entityManager.createQuery(CRITERIA_QUERY).getResultList();
 		} catch (Exception exception) {
-			System.err.println("Catch findAllByToken() in UserDAO");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " findAllByToken() in UserDAO");
 			exception.printStackTrace();
 			
 			return null;
@@ -123,8 +121,7 @@ public class UserDAO extends GenericDAO<User> {
 			
 			return entityManager.createQuery(CRITERIA_QUERY).getSingleResult();
 		} catch (Exception exception) {
-			System.err.println("Catch signIn() in UserDAO");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " signIn() in UserDAO");
 			exception.printStackTrace();
 			
 			return null;
@@ -149,8 +146,7 @@ public class UserDAO extends GenericDAO<User> {
 			
 			return entityManager.createQuery(CRITERIA_UPDATE).executeUpdate();
 		} catch (Exception exception) {
-			System.err.println("Catch signOut() in UserDAO");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " in signOut() in UserDAO");
 			exception.printStackTrace();
 			
 			return null;
@@ -191,13 +187,11 @@ public class UserDAO extends GenericDAO<User> {
 			
 			return typedQuery.getSingleResult();
 		} catch (NoResultException noResultException) { // Esse catch é esperado quando nenhum resultado é encontrado.
-			System.out.println("Catch NoResultException in exists() in UserDAO.");
-			System.err.println(noResultException.getClass().getName());
+			System.out.println("Catch " + noResultException.getClass().getName() + " in exists() in UserDAO.");
 			
 			return false;
 		} catch (Exception exception) {
-			System.err.println("Catch exists() in UserDAO");
-			System.err.println(exception.getClass().getName());
+			System.err.println("Catch " + exception.getClass().getName() + " in exists() in UserDAO");
 			exception.printStackTrace();
 			
 			return null;

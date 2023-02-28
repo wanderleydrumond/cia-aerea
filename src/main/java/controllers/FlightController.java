@@ -46,7 +46,7 @@ public class FlightController {
 	 * @param flightDTO the information of the new flight to be created
 	 * @return
 	 * 		  <ul>
-	 * 			<li><strong>401 (Unauthorized)</strong> if the user does not have a token. (It's not logged)</li>
+	 * 			<li><strong>401 (Unauthorised)</strong> if the user does not have a token. (It's not logged)</li>
 	 * 			<li><strong>403 (Forbidden)</strong></li>
 	 * 				<ul>If: 
 	 * 					<li>User that owns the given token does not exists in database (impossible)</li>

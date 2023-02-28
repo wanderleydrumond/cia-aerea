@@ -48,7 +48,7 @@ public class FlightDAO extends GenericDAO<Flight> {
 			
 			return newestId == null ? 0 : newestId;
 		} catch (Exception exception) {
-			System.err.println("Catch Exception findNewestId() in FlightDAO");
+			System.err.println("Catch " + exception.getClass().getName() + " findNewestId() in FlightDAO");
 			exception.printStackTrace();
 			return null;
 		}
