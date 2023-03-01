@@ -11,6 +11,12 @@ import javax.persistence.Table;
 
 import lombok.Data;
 
+/**
+ * Ticket information type that the backend consumes and produces.
+ * 
+ * @author Wanderley Drumond
+ *
+ */
 @Entity
 @Table(name = "tickets")
 @Data

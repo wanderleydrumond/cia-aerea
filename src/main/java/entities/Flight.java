@@ -15,6 +15,12 @@ import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
+/**
+ * Flight information type that the backend consumes and produces.
+ * 
+ * @author Wanderley Drumond
+ *
+ */
 @Entity
 @Table(name = "flights")
 @Data
