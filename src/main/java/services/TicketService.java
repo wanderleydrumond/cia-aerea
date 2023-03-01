@@ -243,6 +243,7 @@ public class TicketService implements Serializable {
 		
 		return ticketDTO;
 	}
+<<<<<<< HEAD
 
 	/**
 	 * Gets the amount of active tickets that have not yet taken place for the given user id.
@@ -279,4 +280,6 @@ public class TicketService implements Serializable {
 		
 		return ticketsToDelete.size();
 	}
+=======
+>>>>>>> branch 'master' of https://github.com/wanderleydrumond/cia-aerea.git
 }
